@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = MoveStageSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload', code: 'VALIDATION_ERROR' }, { status: 422 });
+    return NextResponse.json({ error: 'Invalid payload', code: 'VALIDATION_ERROR', ok: false }, { status: 200 });
   }
 
   const target = {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid deal id', code: 'VALIDATION_ERROR' }, { status: 422 });
     }
     const res = await moveStageByDealId({ organizationId: auth.organizationId, dealId, target, mark });
-    return NextResponse.json(res.body, { status: res.status });
+    return NextResponse.json(res.body, { status: 200 });
   }
 
   const res = await moveStageByIdentity({
@@ -61,6 +61,9 @@ export async function POST(request: Request) {
     target,
     mark,
   });
-  return NextResponse.json(res.body, { status: res.status });
+  // Always return 200 so webhook callers (e.g. GPTMaker) don't treat errors as failures.
+  // NOT_FOUND is expected when the deal hasn't been created yet — just skip silently.
+  const status = res.ok ? 200 : 200;
+  return NextResponse.json(res.body, { status });
 }
 

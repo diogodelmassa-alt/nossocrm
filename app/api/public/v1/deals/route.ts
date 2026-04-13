@@ -72,7 +72,7 @@ export async function GET(request: Request) {
   const from = offset;
   const to = offset + limit - 1;
   const { data, count, error } = await query.range(from, to);
-  if (error) return NextResponse.json({ error: error.message, code: 'DB_ERROR' }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message, code: 'DB_ERROR', ok: false }, { status: 200 });
 
   const total = count ?? 0;
   const nextOffset = to + 1;
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = DealCreateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload', code: 'VALIDATION_ERROR' }, { status: 422 });
+    return NextResponse.json({ error: 'Invalid payload', code: 'VALIDATION_ERROR', ok: false }, { status: 200 });
   }
 
   const sb = createStaticAdminClient();
@@ -169,7 +169,7 @@ export async function POST(request: Request) {
     boardId = await resolveBoardIdFromKey({ organizationId: auth.organizationId, boardKey: parsed.data.board_key });
   }
   if (!boardId) {
-    return NextResponse.json({ error: 'Provide board_id or board_key', code: 'VALIDATION_ERROR' }, { status: 422 });
+    return NextResponse.json({ error: 'Provide board_id or board_key', code: 'VALIDATION_ERROR', ok: false }, { status: 200 });
   }
 
   let stageId = sanitizeUUID(parsed.data.stage_id);
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
     stageId = await resolveFirstStageId({ organizationId: auth.organizationId, boardId });
   }
   if (!stageId) {
-    return NextResponse.json({ error: 'No stages found for board', code: 'VALIDATION_ERROR' }, { status: 422 });
+    return NextResponse.json({ error: 'No stages found for board', code: 'VALIDATION_ERROR', ok: false }, { status: 200 });
   }
 
   let contactId = sanitizeUUID(parsed.data.contact_id);
@@ -185,11 +185,11 @@ export async function POST(request: Request) {
     try {
       contactId = await upsertContactForDeal({ organizationId: auth.organizationId, contact: parsed.data.contact });
     } catch (e: any) {
-      return NextResponse.json({ error: e?.message || 'Invalid contact', code: 'VALIDATION_ERROR' }, { status: 422 });
+      return NextResponse.json({ error: e?.message || 'Invalid contact', code: 'VALIDATION_ERROR', ok: false }, { status: 200 });
     }
   }
   if (!contactId) {
-    return NextResponse.json({ error: 'Provide contact_id or contact', code: 'VALIDATION_ERROR' }, { status: 422 });
+    return NextResponse.json({ error: 'Provide contact_id or contact', code: 'VALIDATION_ERROR', ok: false }, { status: 200 });
   }
 
   const now = new Date().toISOString();
@@ -213,8 +213,8 @@ export async function POST(request: Request) {
     .insert(insertPayload)
     .select('id,title,value,board_id,stage_id,contact_id,client_company_id,is_won,is_lost,loss_reason,closed_at,created_at,updated_at')
     .single();
-  if (error) return NextResponse.json({ error: error.message, code: 'DB_ERROR' }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message, code: 'DB_ERROR', ok: false }, { status: 200 });
 
-  return NextResponse.json({ data, action: 'created' }, { status: 201 });
+  return NextResponse.json({ data, action: 'created' }, { status: 200 });
 }
 
