@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = MoveStageByIdentitySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Invalid payload', code: 'VALIDATION_ERROR' }, { status: 422 });
+    return NextResponse.json({ error: 'Invalid payload', code: 'VALIDATION_ERROR', ok: false }, { status: 200 });
   }
 
   const res = await moveStageByIdentity({
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     target: { to_stage_id: parsed.data.to_stage_id ?? null, to_stage_label: parsed.data.to_stage_label ?? null },
     mark: parsed.data.mark ?? null,
   });
-  // Compatibility alias (old name) — keep working.
-  return NextResponse.json(res.body, { status: res.status });
+  // Compatibility alias (old name) — always return 200 so callers (e.g. GPTMaker) never treat errors as webhook failures.
+  return NextResponse.json(res.body, { status: 200 });
 }
 
