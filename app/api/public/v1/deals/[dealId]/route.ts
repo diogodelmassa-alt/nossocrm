@@ -77,3 +77,24 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ dealId: s
   return NextResponse.json({ data });
 }
 
+export async function DELETE(request: Request, ctx: { params: Promise<{ dealId: string }> }) {
+  const auth = await authPublicApi(request);
+  if (!auth.ok) return NextResponse.json(auth.body, { status: auth.status });
+
+  const { dealId } = await ctx.params;
+  if (!isValidUUID(dealId)) {
+    return NextResponse.json({ error: 'Invalid deal id', code: 'VALIDATION_ERROR' }, { status: 422 });
+  }
+
+  const sb = createStaticAdminClient();
+  const { error } = await sb
+    .from('deals')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('organization_id', auth.organizationId)
+    .eq('id', dealId);
+
+  if (error) return NextResponse.json({ error: error.message, code: 'DB_ERROR' }, { status: 500 });
+
+  return NextResponse.json({ ok: true });
+}
+
