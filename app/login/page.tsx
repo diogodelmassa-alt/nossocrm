@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getErrorMessage } from '@/lib/utils/errorUtils'
+import Link from 'next/link'
 import { Loader2, Mail, Lock, ArrowRight } from 'lucide-react'
 
 /**
@@ -108,6 +109,15 @@ export default function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
+                        </div>
+
+                        <div className="flex items-center justify-end">
+                            <Link
+                                href="/forgot-password"
+                                className="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+                            >
+                                Esqueci a senha
+                            </Link>
                         </div>
 
                         {error && (
